@@ -13,7 +13,19 @@ impl<'a>  Parser<'a> {
 
     pub fn advance(&mut self) {
         if let Some(line) = self.input_iterator.next(){
-            self.current_command = Some(line.into());
+            // copy string slice to a string
+            let mut s : String = line.to_string();
+            // remove whitespace and comments
+            s = str::replace(&s, " ", "");
+            let comment_offset = s.find("//").unwrap_or(s.len());
+            let command : String = s.drain(..comment_offset).collect();
+            // if there is a valid command, store it in self.current_command. Otherwise, advance further
+            if command.is_empty(){
+                self.advance();
+            }
+            else {
+                self.current_command = Some(command);
+            }            
         }
         else {
             self.current_command = None;
@@ -22,19 +34,10 @@ impl<'a>  Parser<'a> {
 
     pub fn silly_print(&mut self){
         self.advance();
-        while self.current_command != None {
-            println!("{}", self.get_current_command_without_comments_and_whitespace());
+        while self.current_command != None {          
+            println!("{}", self.current_command.as_ref().unwrap());            
             self.advance();
         }
-    }
-
-    pub fn get_current_command_without_comments_and_whitespace(&self) -> String {
-        let mut s = self.current_command.clone().unwrap_or(String::new());
-        s = str::replace(&s, " ", "");
-
-        let comment_offset = s.find("//").unwrap_or(s.len());
-        let ret : String = s.drain(..comment_offset).collect();        
-        return ret;
     }
 
     
