@@ -70,9 +70,6 @@ fn main() {
             Ok(_) => println!("successfully wrote to {}", display),
         }
     }
-    
-    
-    println!("-----------------------------------");
-    parser.silly_print();
+
 
 }

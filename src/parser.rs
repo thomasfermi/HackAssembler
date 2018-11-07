@@ -17,14 +17,11 @@ pub struct CCommand {
 }
 
 
-
 #[derive(Debug)]
 pub enum Command {
     A {address:usize},
     C {command : CCommand},
-    L {symbol_name : String},
 }
-
 
 
 pub struct Parser<'a> {
@@ -152,7 +149,6 @@ impl<'a>  Parser<'a> {
                     jump = self.jump_dictionary[&command.jmp]
                 )
             },
-            _ => "".to_string(),
         }
     }
 
@@ -178,7 +174,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn get_l_string(&mut self) -> Option<String> {
+    pub fn get_l_symbol(&mut self) -> Option<String> {
         let c = self.current_command_string.as_ref().unwrap();
         lazy_static! {
             static ref re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
@@ -193,7 +189,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn get_command(&mut self) -> Command {
+    pub fn get_command(&mut self) -> Option<Command> {
         // TODO: more thorough checking for invalid commands
         let c = self.current_command_string.as_ref().unwrap();
         lazy_static! {
@@ -201,17 +197,13 @@ impl<'a>  Parser<'a> {
             static ref re_a_command : Regex = Regex::new(r"^@([_0-9a-zA-Z\.\$:]+)").unwrap();
             static ref re_c_command : Regex = Regex::new(r"^([ADM]*)(=?)([-\+01DAM!&\|]+)(;?)([JGTEQNLMP]*)").unwrap();
         }
-        println!("{}",c);
 
         if re_c_command.is_match(c) {
             let caps = re_c_command.captures(c).unwrap();
-            /*for i in 0..9 {
-                println!("cap{}::::::::{}",i,caps.get(i).map_or("", |m| m.as_str()));
-            }*/
             let dest = caps.get(1).map_or("", |m| m.as_str());
             let comp = caps.get(3).map_or("", |m| m.as_str());
             let jmp = caps.get(5).map_or("", |m| m.as_str());     
-            return Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}};       
+            return Some(Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}});       
         }
         else if re_a_command.is_match(c) {
             let caps = re_a_command.captures(c).unwrap();
@@ -223,39 +215,32 @@ impl<'a>  Parser<'a> {
                     if !self.symbol_table.contains_key(&address_or_symbol) {
                         self.symbol_table.insert(address_or_symbol.clone(), self.running_symbol_memory_address);
                         self.running_symbol_memory_address += 1;
-                        println!("running_symbol_memory_address={}",self.running_symbol_memory_address);
                     }
 
                     self.symbol_table[&address_or_symbol]
                 },
             };
-            return Command::A {address : address_number};
+            return Some(Command::A {address : address_number});
         }
         else if re_l_command.is_match(c) {
-            let caps = re_l_command.captures(c).unwrap();
-            let symbol_name : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
-            return Command::L {symbol_name};
+            return None;
         }
         else {
             panic!("Assembler failed at line {}", self.current_line_number);
         }
-        //TODO error handling
+        //TODO: error handling better than this pathetic panic.
     }
 
     pub fn assemble(&mut self) -> String{
         self.build_symbol_table();
         self.reset_input_iterator();
-
-        println!("GoldenEgg");
         
         let mut output  = String::new();
         self.advance();
         while self.current_command_string != None {        
-            let command = self.get_command();
-            match command {
-                Command::L {symbol_name: _} => {  }, // do nothing
-                _ =>  output += &format!("{}\n", self.get_machine_language_command(command)),
-            }                
+            if let Some(command) = self.get_command(){
+                output += &format!("{}\n", self.get_machine_language_command(command));
+            }    
             self.advance();
         }
         return output;
@@ -265,30 +250,16 @@ impl<'a>  Parser<'a> {
     pub fn build_symbol_table(&mut self) {
         let mut line_counter : usize = 0;
         self.advance();
-        while self.current_command_string != None {          
-            let command = self.get_command();
-            match command {
-                Command::L {symbol_name} => {
-                    self.symbol_table.insert(symbol_name, line_counter);
-                },
-                _ => line_counter +=1,
+        while self.current_command_string != None {
+            if let Some(symbol_name) = self.get_l_symbol(){
+                self.symbol_table.insert(symbol_name, line_counter);
+            }
+            else {
+                line_counter +=1;
             }
             self.advance();
         }
     }
-
-    pub fn silly_print(&mut self){
-        /*self.advance();
-        while self.current_command_string != None {          
-            println!("{}", self.current_command_string.as_ref().unwrap());  
-            println!("{:?}", self.get_command());  
-            //println!("{}", self.get_machine_language_command(self.get_command()));     
-            self.advance();
-        }*/
-        println!("{:?}" ,self.symbol_table);
-    }
-
-
     
 }
 
