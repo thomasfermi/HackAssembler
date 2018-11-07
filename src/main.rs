@@ -1,6 +1,7 @@
 #![deny(missing_docs)]
 //! HackAssembler
 
+#[macro_use] extern crate lazy_static;
 extern crate clap;
 use clap::{Arg, App};
 use std::fs::File;
@@ -70,11 +71,8 @@ fn main() {
         }
     }
     
-    /*
-    parser.silly_print();
+    
     println!("-----------------------------------");
-    parser = Parser::new(&contents);
     parser.silly_print();
-    */
 
 }
