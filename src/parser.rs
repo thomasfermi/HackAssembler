@@ -1,10 +1,11 @@
+#![deny(missing_docs)]
 
 extern crate regex;
 use self::regex::Regex;
 use std::str::Lines;
 use std::collections::HashMap;
 
-//TODO: enforce documentation; try clippy; when parsing is not possible return error with line number
+//TODO: enforce documentation; try clippy;
 //TODO: Some doc unit tests (only when this is lib crate?)
 
 
@@ -226,9 +227,9 @@ impl<'a>  Parser<'a> {
             return None;
         }
         else {
-            panic!("Assembler failed at line {}", self.current_line_number);
+            println!("Assembler failed. Syntax error at line {} of the input file.", self.current_line_number);
+            ::std::process::exit(1);
         }
-        //TODO: error handling better than this pathetic panic.
     }
 
     pub fn assemble(&mut self) -> String{
