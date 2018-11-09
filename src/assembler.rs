@@ -5,15 +5,12 @@ use self::regex::Regex;
 use std::str::Lines;
 use std::collections::HashMap;
 
-
-
 #[derive(Debug)]
 pub struct CCommand {
     dest : String,
     comp : String,
     jmp : String,
 }
-
 
 #[derive(Debug)]
 pub enum Command {
