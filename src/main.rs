@@ -9,9 +9,9 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::path::Path;
 
-pub use parser::Parser;
+pub use assembler::Assembler;
 
-mod parser;
+mod assembler;
 
 fn main() {
     let matches = App::new("HackAssembler")
@@ -36,8 +36,8 @@ fn main() {
 
     let output_file_name = str::replace(&input_file_name,".asm", ".hack");
 
-    let mut parser = Parser::new(&contents);
-    let machine_language_program = parser.assemble();
+    let mut assembler = Assembler::new(&contents);
+    let machine_language_program = assembler.assemble();
 
     // Write to output file
     {

@@ -1,4 +1,4 @@
-//! Parser
+//! Assembler
 
 extern crate regex;
 use self::regex::Regex;
@@ -21,8 +21,8 @@ pub enum Command {
     C {command : CCommand},
 }
 
-/// Parser
-pub struct Parser<'a> {
+/// Assembler struct for Hack language
+pub struct Assembler<'a> {
     input_string : &'a str,
     input_iterator : Lines<'a>,
     current_command_string : Option<String>,
@@ -34,8 +34,8 @@ pub struct Parser<'a> {
     jump_dictionary : HashMap<String,String>,
 }
 
-impl<'a>  Parser<'a> {
-    /// Creates new Parser
+impl<'a>  Assembler<'a> {
+    /// Creates new Assembler
     pub fn new(input : &'a str) -> Self {
 
         let mut symbol_table = HashMap::new();
@@ -116,7 +116,7 @@ impl<'a>  Parser<'a> {
         jump_dictionary.insert("JLE".to_string(),  "110".to_string());
         jump_dictionary.insert("JMP".to_string(),  "111".to_string());
 
-        Parser {
+        Assembler {
             input_string : input,
             input_iterator : input.lines(),
             current_command_string : None,
