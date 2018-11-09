@@ -32,12 +32,14 @@ pub struct Assembler<'a> {
     compute_dictionary : HashMap<String,String>,
     dest_dictionary : HashMap<String,String>,
     jump_dictionary : HashMap<String,String>,
+    re_l_command : Regex,
+    re_a_command : Regex,
+    re_c_command : Regex,
 }
 
 impl<'a>  Assembler<'a> {
     /// Creates new Assembler
     pub fn new(input : &'a str) -> Self {
-
         let mut symbol_table = HashMap::new();
         symbol_table.insert("SP".to_string(), 0);
         symbol_table.insert("LCL".to_string(), 1);
@@ -116,6 +118,10 @@ impl<'a>  Assembler<'a> {
         jump_dictionary.insert("JLE".to_string(),  "110".to_string());
         jump_dictionary.insert("JMP".to_string(),  "111".to_string());
 
+        let re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
+        let re_a_command : Regex = Regex::new(r"^@([_0-9a-zA-Z\.\$:]+)").unwrap();
+        let re_c_command : Regex = Regex::new(r"^([ADM]*)(=?)([-\+01DAM!&\|]+)(;?)([JGTEQNLMP]*)").unwrap();
+
         Assembler {
             input_string : input,
             input_iterator : input.lines(),
@@ -125,7 +131,10 @@ impl<'a>  Assembler<'a> {
             symbol_table,
             compute_dictionary,
             dest_dictionary,
-            jump_dictionary
+            jump_dictionary,
+            re_l_command,
+            re_a_command,
+            re_c_command,
         }
     }
 
@@ -133,22 +142,6 @@ impl<'a>  Assembler<'a> {
     {
         self.current_line_number=0;
         self.input_iterator = self.input_string.lines();
-    }
-
-    fn get_machine_language_command(&self, command : Command) -> String  {
-        match command {
-            Command::A {address} => {
-                let s = format!("{:b}", address); // convert to binary
-                format!("{:0>16}", s) // append zeros to the left so that it is a string of size 16
-            },
-            Command::C {command} => {
-                format!("111{comp}{dest}{jump}",
-                    comp = self.compute_dictionary[&command.comp],
-                    dest = self.dest_dictionary[&command.dest],
-                    jump = self.jump_dictionary[&command.jmp]
-                )
-            },
-        }
     }
 
     fn advance(&mut self) {
@@ -173,74 +166,17 @@ impl<'a>  Assembler<'a> {
         }
     }
 
-    fn get_l_symbol(&mut self) -> Option<String> {
-        let c = self.current_command_string.as_ref().unwrap();
-        lazy_static! {
-            static ref re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
-        }
-        if re_l_command.is_match(c) {
-            let caps = re_l_command.captures(c).unwrap();
-            let symbol_name : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
-            Some(symbol_name)
-        }
-        else {
-            None
-        }
-    }
-
-    fn get_command(&mut self) -> Option<Command> {
-        // TODO: more thorough checking for invalid commands
-        let c = self.current_command_string.as_ref().unwrap();
-        lazy_static! {
-            static ref re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
-            static ref re_a_command : Regex = Regex::new(r"^@([_0-9a-zA-Z\.\$:]+)").unwrap();
-            static ref re_c_command : Regex = Regex::new(r"^([ADM]*)(=?)([-\+01DAM!&\|]+)(;?)([JGTEQNLMP]*)").unwrap();
-        }
-
-        if re_c_command.is_match(c) {
-            let caps = re_c_command.captures(c).unwrap();
-            let dest = caps.get(1).map_or("", |m| m.as_str());
-            let comp = caps.get(3).map_or("", |m| m.as_str());
-            let jmp = caps.get(5).map_or("", |m| m.as_str());     
-            Some(Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}})     
-        }
-        else if re_a_command.is_match(c) {
-            let caps = re_a_command.captures(c).unwrap();
-            let address_or_symbol : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
-
-            let address_number = match address_or_symbol.parse::<usize>() {
-                Ok(number) => number,
-                _ => {
-                    if !self.symbol_table.contains_key(&address_or_symbol) {
-                        self.symbol_table.insert(address_or_symbol.clone(), self.running_symbol_memory_address);
-                        self.running_symbol_memory_address += 1;
-                    }
-
-                    self.symbol_table[&address_or_symbol]
-                },
-            };
-            Some(Command::A {address : address_number})
-        }
-        else if re_l_command.is_match(c) {
-            None
-        }
-        else {
-            println!("Assembler failed. Syntax error at line {} of the input file.", self.current_line_number);
-            ::std::process::exit(1);
-        }
-    }
-
     /// Converts the input file to a Hack machine language program. The 0's and 1's in the machine language program are written to a String.
     pub fn assemble(&mut self) -> String{
         self.build_symbol_table();
         self.reset_input_iterator();
-        
+
         let mut output  = String::new();
         self.advance();
-        while self.current_command_string != None {        
+        while self.current_command_string != None {
             if let Some(command) = self.get_command(){
                 output += &format!("{}\n", self.get_machine_language_command(command));
-            }    
+            }
             self.advance();
         }
         output
@@ -258,6 +194,72 @@ impl<'a>  Assembler<'a> {
                 line_counter +=1;
             }
             self.advance();
+        }
+    }
+
+
+    fn get_machine_language_command(&self, command : Command) -> String  {
+        match command {
+            Command::A {address} => {
+                let s = format!("{:b}", address); // convert to binary
+                format!("{:0>16}", s) // append zeros to the left so that it is a string of size 16
+            },
+            Command::C {command} => {
+                format!("111{comp}{dest}{jump}",
+                    comp = self.compute_dictionary[&command.comp],
+                    dest = self.dest_dictionary[&command.dest],
+                    jump = self.jump_dictionary[&command.jmp]
+                )
+            },
+        }
+    }
+
+    fn get_l_symbol(&mut self) -> Option<String> {
+        let c = self.current_command_string.as_ref().unwrap();
+        if self.re_l_command.is_match(c) {
+            let caps = self.re_l_command.captures(c).unwrap();
+            let symbol_name : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
+            Some(symbol_name)
+        }
+        else {
+            None
+        }
+    }
+
+    fn get_command(&mut self) -> Option<Command> {
+        // TODO: more thorough checking for invalid commands
+        let c = self.current_command_string.as_ref().unwrap();
+
+        if self.re_c_command.is_match(c) {
+            let caps = self.re_c_command.captures(c).unwrap();
+            let dest = caps.get(1).map_or("", |m| m.as_str());
+            let comp = caps.get(3).map_or("", |m| m.as_str());
+            let jmp = caps.get(5).map_or("", |m| m.as_str());     
+            Some(Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}})     
+        }
+        else if self.re_a_command.is_match(c) {
+            let caps = self.re_a_command.captures(c).unwrap();
+            let address_or_symbol : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
+
+            let address_number = match address_or_symbol.parse::<usize>() {
+                Ok(number) => number,
+                _ => {
+                    if !self.symbol_table.contains_key(&address_or_symbol) {
+                        self.symbol_table.insert(address_or_symbol.clone(), self.running_symbol_memory_address);
+                        self.running_symbol_memory_address += 1;
+                    }
+
+                    self.symbol_table[&address_or_symbol]
+                },
+            };
+            Some(Command::A {address : address_number})
+        }
+        else if self.re_l_command.is_match(c) {
+            None
+        }
+        else {
+            println!("Assembler failed. Syntax error at line {} of the input file.", self.current_line_number);
+            ::std::process::exit(1);
         }
     }
     

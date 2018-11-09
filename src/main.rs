@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 //! HackAssembler
 
-#[macro_use] extern crate lazy_static;
+
 extern crate clap;
 use clap::{Arg, App};
 use std::fs::File;
