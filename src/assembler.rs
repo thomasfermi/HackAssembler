@@ -75,57 +75,57 @@ impl<'a>  Assembler<'a> {
         symbol_table.insert("KBD".to_string(), 24576);
 
 
-        let mut compute_dictionary = HashMap::new();
-        compute_dictionary.insert("0".to_string(),   "0101010".to_string());
-        compute_dictionary.insert("1".to_string(),   "0111111".to_string());
-        compute_dictionary.insert("-1".to_string(),  "0111010".to_string());
-        compute_dictionary.insert("D".to_string(),   "0001100".to_string());
-        compute_dictionary.insert("A".to_string(),   "0110000".to_string());
-        compute_dictionary.insert("M".to_string(),   "1110000".to_string());
-        compute_dictionary.insert("!D".to_string(),  "0001101".to_string());
-        compute_dictionary.insert("!A".to_string(),  "0110001".to_string());
-        compute_dictionary.insert("!M".to_string(),  "1110001".to_string());
-        compute_dictionary.insert("-D".to_string(),  "0001111".to_string());
-        compute_dictionary.insert("-A".to_string(),  "0110011".to_string());
-        compute_dictionary.insert("-M".to_string(),  "1110011".to_string());
-        compute_dictionary.insert("D+1".to_string(), "0011111".to_string());
-        compute_dictionary.insert("A+1".to_string(), "0110111".to_string());
-        compute_dictionary.insert("M+1".to_string(), "1110111".to_string());
-        compute_dictionary.insert("D-1".to_string(), "0001110".to_string());
-        compute_dictionary.insert("A-1".to_string(), "0110010".to_string());
-        compute_dictionary.insert("M-1".to_string(), "1110010".to_string());
-        compute_dictionary.insert("D+A".to_string(), "0000010".to_string());
-        compute_dictionary.insert("D+M".to_string(), "1000010".to_string());
-        compute_dictionary.insert("D-A".to_string(), "0010011".to_string());
-        compute_dictionary.insert("D-M".to_string(), "1010011".to_string());
-        compute_dictionary.insert("A-D".to_string(), "0000111".to_string());
-        compute_dictionary.insert("M-D".to_string(), "1000111".to_string());
-        compute_dictionary.insert("D&A".to_string(), "0000000".to_string());
-        compute_dictionary.insert("D&M".to_string(), "1000000".to_string());
-        compute_dictionary.insert("D|A".to_string(), "0010101".to_string());
-        compute_dictionary.insert("D|M".to_string(), "1010101".to_string());
+        let mut compute_hash_map = HashMap::new();
+        compute_hash_map.insert("0".to_string(),   "0101010".to_string());
+        compute_hash_map.insert("1".to_string(),   "0111111".to_string());
+        compute_hash_map.insert("-1".to_string(),  "0111010".to_string());
+        compute_hash_map.insert("D".to_string(),   "0001100".to_string());
+        compute_hash_map.insert("A".to_string(),   "0110000".to_string());
+        compute_hash_map.insert("M".to_string(),   "1110000".to_string());
+        compute_hash_map.insert("!D".to_string(),  "0001101".to_string());
+        compute_hash_map.insert("!A".to_string(),  "0110001".to_string());
+        compute_hash_map.insert("!M".to_string(),  "1110001".to_string());
+        compute_hash_map.insert("-D".to_string(),  "0001111".to_string());
+        compute_hash_map.insert("-A".to_string(),  "0110011".to_string());
+        compute_hash_map.insert("-M".to_string(),  "1110011".to_string());
+        compute_hash_map.insert("D+1".to_string(), "0011111".to_string());
+        compute_hash_map.insert("A+1".to_string(), "0110111".to_string());
+        compute_hash_map.insert("M+1".to_string(), "1110111".to_string());
+        compute_hash_map.insert("D-1".to_string(), "0001110".to_string());
+        compute_hash_map.insert("A-1".to_string(), "0110010".to_string());
+        compute_hash_map.insert("M-1".to_string(), "1110010".to_string());
+        compute_hash_map.insert("D+A".to_string(), "0000010".to_string());
+        compute_hash_map.insert("D+M".to_string(), "1000010".to_string());
+        compute_hash_map.insert("D-A".to_string(), "0010011".to_string());
+        compute_hash_map.insert("D-M".to_string(), "1010011".to_string());
+        compute_hash_map.insert("A-D".to_string(), "0000111".to_string());
+        compute_hash_map.insert("M-D".to_string(), "1000111".to_string());
+        compute_hash_map.insert("D&A".to_string(), "0000000".to_string());
+        compute_hash_map.insert("D&M".to_string(), "1000000".to_string());
+        compute_hash_map.insert("D|A".to_string(), "0010101".to_string());
+        compute_hash_map.insert("D|M".to_string(), "1010101".to_string());
 
-        let mut dest_dictionary = HashMap::new();
-        dest_dictionary.insert("null".to_string(), "000".to_string());
-        dest_dictionary.insert("".to_string(),     "000".to_string());
-        dest_dictionary.insert("M".to_string(),    "001".to_string());
-        dest_dictionary.insert("D".to_string(),    "010".to_string());
-        dest_dictionary.insert("MD".to_string(),   "011".to_string());
-        dest_dictionary.insert("A".to_string(),    "100".to_string());
-        dest_dictionary.insert("AM".to_string(),   "101".to_string());
-        dest_dictionary.insert("AD".to_string(),   "110".to_string());
-        dest_dictionary.insert("AMD".to_string(),  "111".to_string());
+        let mut dest_hash_map = HashMap::new();
+        dest_hash_map.insert("null".to_string(), "000".to_string());
+        dest_hash_map.insert("".to_string(),     "000".to_string());
+        dest_hash_map.insert("M".to_string(),    "001".to_string());
+        dest_hash_map.insert("D".to_string(),    "010".to_string());
+        dest_hash_map.insert("MD".to_string(),   "011".to_string());
+        dest_hash_map.insert("A".to_string(),    "100".to_string());
+        dest_hash_map.insert("AM".to_string(),   "101".to_string());
+        dest_hash_map.insert("AD".to_string(),   "110".to_string());
+        dest_hash_map.insert("AMD".to_string(),  "111".to_string());
 
-        let mut jump_dictionary = HashMap::new();
-        jump_dictionary.insert("null".to_string(), "000".to_string());
-        jump_dictionary.insert("".to_string(),     "000".to_string());
-        jump_dictionary.insert("JGT".to_string(),  "001".to_string());
-        jump_dictionary.insert("JEQ".to_string(),  "010".to_string());
-        jump_dictionary.insert("JGE".to_string(),  "011".to_string());
-        jump_dictionary.insert("JLT".to_string(),  "100".to_string());
-        jump_dictionary.insert("JNE".to_string(),  "101".to_string());
-        jump_dictionary.insert("JLE".to_string(),  "110".to_string());
-        jump_dictionary.insert("JMP".to_string(),  "111".to_string());
+        let mut jump_hash_map = HashMap::new();
+        jump_hash_map.insert("null".to_string(), "000".to_string());
+        jump_hash_map.insert("".to_string(),     "000".to_string());
+        jump_hash_map.insert("JGT".to_string(),  "001".to_string());
+        jump_hash_map.insert("JEQ".to_string(),  "010".to_string());
+        jump_hash_map.insert("JGE".to_string(),  "011".to_string());
+        jump_hash_map.insert("JLT".to_string(),  "100".to_string());
+        jump_hash_map.insert("JNE".to_string(),  "101".to_string());
+        jump_hash_map.insert("JLE".to_string(),  "110".to_string());
+        jump_hash_map.insert("JMP".to_string(),  "111".to_string());
 
         let re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
         let re_a_command : Regex = Regex::new(r"^@([_0-9a-zA-Z\.\$:]+)").unwrap();
@@ -138,9 +138,9 @@ impl<'a>  Assembler<'a> {
             current_line_number : 0,
             address_for_next_symbol: 16,
             symbol_table,
-            compute_hash_map: compute_dictionary,
-            dest_hash_map: dest_dictionary,
-            jump_hash_map: jump_dictionary,
+            compute_hash_map,
+            dest_hash_map,
+            jump_hash_map,
             re_l_command,
             re_a_command,
             re_c_command,
