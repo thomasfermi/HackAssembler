@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+//! Parser
 
 extern crate regex;
 use self::regex::Regex;
