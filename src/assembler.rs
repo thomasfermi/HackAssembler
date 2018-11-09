@@ -17,23 +17,35 @@ pub struct CCommand {
 
 #[derive(Debug)]
 pub enum Command {
-    A {address:usize},
+    A {address : usize},
     C {command : CCommand},
 }
 
 /// Assembler struct for Hack language
 pub struct Assembler<'a> {
+    /// The content of a file with assembly code ("*.asm" file) is represented by a String
     input_string : &'a str,
+    /// The iterator allows going through the assembly code file line by line
     input_iterator : Lines<'a>,
+    /// The current line of the assembly code file is copied into a string
     current_command_string : Option<String>,
+    /// current line number in the assembly code file. Needed point user to errors
     current_line_number : usize,
-    running_symbol_memory_address : usize,
+    /// For A-commands with user-defined symbols we assign a new memory address in the A register.
+    address_for_next_symbol: usize,
+    /// The symbol table stores a mapping from user defined symbols to the corresponding address
     symbol_table : HashMap<String, usize>,
-    compute_dictionary : HashMap<String,String>,
-    dest_dictionary : HashMap<String,String>,
-    jump_dictionary : HashMap<String,String>,
+    /// Hash map that maps a compute command like "A+1" to the corresponding bit representation
+    compute_hash_map: HashMap<String,String>,
+    /// Hash map that maps a dest command like "D" to the corresponding bit representation
+    dest_hash_map: HashMap<String,String>,
+    /// Hash map that maps a jump command like "JGT" to the corresponding bit representation
+    jump_hash_map: HashMap<String,String>,
+    /// Regular expression to identify and parse an L-(pseudo)-command
     re_l_command : Regex,
+    /// Regular expression to identify and parse a A-command
     re_a_command : Regex,
+    /// Regular expression to identify and parse a C-command
     re_c_command : Regex,
 }
 
@@ -127,11 +139,11 @@ impl<'a>  Assembler<'a> {
             input_iterator : input.lines(),
             current_command_string : None,
             current_line_number : 0,
-            running_symbol_memory_address : 16,
+            address_for_next_symbol: 16,
             symbol_table,
-            compute_dictionary,
-            dest_dictionary,
-            jump_dictionary,
+            compute_hash_map: compute_dictionary,
+            dest_hash_map: dest_dictionary,
+            jump_hash_map: jump_dictionary,
             re_l_command,
             re_a_command,
             re_c_command,
@@ -144,6 +156,8 @@ impl<'a>  Assembler<'a> {
         self.input_iterator = self.input_string.lines();
     }
 
+    /// Calls "next" on the input iterator which corresponds to jumping to the next line in the assembly
+    /// program. Removes whitespace and comments and disregards empty lines.
     fn advance(&mut self) {
         if let Some(line) = self.input_iterator.next(){
             self.current_line_number += 1;
@@ -166,7 +180,8 @@ impl<'a>  Assembler<'a> {
         }
     }
 
-    /// Converts the input file to a Hack machine language program. The 0's and 1's in the machine language program are written to a String.
+    /// Converts the input file to a Hack machine language program.
+    /// The 0's and 1's in the machine language program are written to a String.
     pub fn assemble(&mut self) -> String{
         self.build_symbol_table();
         self.reset_input_iterator();
@@ -182,7 +197,9 @@ impl<'a>  Assembler<'a> {
         output
     }
 
-
+    /// Passes through the whole assembly code and inserts the symbols of L-(pseudo)-commands into
+    /// as hash table. The value associated with such a symbol is the ROM address of the following
+    /// command.
     fn build_symbol_table(&mut self) {
         let mut line_counter : usize = 0;
         self.advance();
@@ -197,7 +214,8 @@ impl<'a>  Assembler<'a> {
         }
     }
 
-
+    /// Converts a command like "D=A;JMP" into the corresponding 16 bit machine code represented by
+    /// a string.
     fn get_machine_language_command(&self, command : Command) -> String  {
         match command {
             Command::A {address} => {
@@ -206,14 +224,15 @@ impl<'a>  Assembler<'a> {
             },
             Command::C {command} => {
                 format!("111{comp}{dest}{jump}",
-                    comp = self.compute_dictionary[&command.comp],
-                    dest = self.dest_dictionary[&command.dest],
-                    jump = self.jump_dictionary[&command.jmp]
+                        comp = self.compute_hash_map[&command.comp],
+                        dest = self.dest_hash_map[&command.dest],
+                        jump = self.jump_hash_map[&command.jmp]
                 )
             },
         }
     }
 
+    /// Extracts the symbol name (e.g. "LOOP") from an L (pseudo-) command like "(LOOP)".
     fn get_l_symbol(&mut self) -> Option<String> {
         let c = self.current_command_string.as_ref().unwrap();
         if self.re_l_command.is_match(c) {
@@ -226,6 +245,7 @@ impl<'a>  Assembler<'a> {
         }
     }
 
+    /// converts the current command string into a Command enum if possible.
     fn get_command(&mut self) -> Option<Command> {
         // TODO: more thorough checking for invalid commands
         let c = self.current_command_string.as_ref().unwrap();
@@ -245,8 +265,8 @@ impl<'a>  Assembler<'a> {
                 Ok(number) => number,
                 _ => {
                     if !self.symbol_table.contains_key(&address_or_symbol) {
-                        self.symbol_table.insert(address_or_symbol.clone(), self.running_symbol_memory_address);
-                        self.running_symbol_memory_address += 1;
+                        self.symbol_table.insert(address_or_symbol.clone(), self.address_for_next_symbol);
+                        self.address_for_next_symbol += 1;
                     }
 
                     self.symbol_table[&address_or_symbol]

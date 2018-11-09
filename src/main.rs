@@ -1,5 +1,7 @@
 #![deny(missing_docs)]
 //! HackAssembler
+//! Converts Hack Assembly Code into Hack machine language. Hack is a computer specified in
+//! "The elements of Computing Systems" (a.k.a. "nand2tetris") by Nisan and Schocken.
 
 
 extern crate clap;
@@ -15,7 +17,7 @@ mod assembler;
 
 fn main() {
     let matches = App::new("HackAssembler")
-                          .version("0.1")
+                          .version("0.7")
                           .author("thomasfermi")
                           .about("Converts Hack Assembly Code into Hack machine language. Hack is a computer specified in \"The elements of Computing Systems\" by Nisan and Schocken.")
                           .arg(Arg::with_name("assembly_input_file")
