@@ -1,4 +1,3 @@
-#![deny(missing_docs)]
 //! Parser
 
 extern crate regex;
@@ -25,7 +24,7 @@ pub enum Command {
     C {command : CCommand},
 }
 
-
+/// Parser
 pub struct Parser<'a> {
     input_string : &'a String,
     input_iterator : Lines<'a>,
@@ -39,6 +38,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a>  Parser<'a> {
+    /// Creates new Parser
     pub fn new(input : &'a String ) -> Self {
 
         let mut symbol_table = HashMap::new();
@@ -132,13 +132,13 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn reset_input_iterator(&mut self)
+    fn reset_input_iterator(&mut self)
     {
         self.current_line_number=0;
         self.input_iterator = self.input_string.lines();
     }
 
-    pub fn get_machine_language_command(&self, command : Command) -> String  {
+    fn get_machine_language_command(&self, command : Command) -> String  {
         match command {
             Command::A {address} => {
                 let s = format!("{:b}", address); // convert to binary
@@ -154,7 +154,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn advance(&mut self) {
+    fn advance(&mut self) {
         if let Some(line) = self.input_iterator.next(){
             self.current_line_number += 1;
             // copy string slice to a string
@@ -176,7 +176,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn get_l_symbol(&mut self) -> Option<String> {
+    fn get_l_symbol(&mut self) -> Option<String> {
         let c = self.current_command_string.as_ref().unwrap();
         lazy_static! {
             static ref re_l_command : Regex = Regex::new(r"^\(([_0-9a-zA-Z\.\$:]+)\)").unwrap();
@@ -191,7 +191,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
-    pub fn get_command(&mut self) -> Option<Command> {
+    fn get_command(&mut self) -> Option<Command> {
         // TODO: more thorough checking for invalid commands
         let c = self.current_command_string.as_ref().unwrap();
         lazy_static! {
@@ -233,6 +233,7 @@ impl<'a>  Parser<'a> {
         }
     }
 
+    /// Converts the input file to a Hack machine language program. The 0's and 1's in the machine language program are written to a String.
     pub fn assemble(&mut self) -> String{
         self.build_symbol_table();
         self.reset_input_iterator();
@@ -249,7 +250,7 @@ impl<'a>  Parser<'a> {
     }
 
 
-    pub fn build_symbol_table(&mut self) {
+    fn build_symbol_table(&mut self) {
         let mut line_counter : usize = 0;
         self.advance();
         while self.current_command_string != None {

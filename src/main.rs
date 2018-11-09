@@ -9,9 +9,9 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::path::Path;
 
-mod parser;
+pub use parser::Parser;
 
-use parser::Parser;
+mod parser;
 
 fn main() {
     let matches = App::new("HackAssembler")
