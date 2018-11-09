@@ -5,9 +5,6 @@ use self::regex::Regex;
 use std::str::Lines;
 use std::collections::HashMap;
 
-//TODO: enforce documentation; try clippy;
-//TODO: Some doc unit tests (only when this is lib crate?)
-
 
 
 #[derive(Debug)]
@@ -26,7 +23,7 @@ pub enum Command {
 
 /// Parser
 pub struct Parser<'a> {
-    input_string : &'a String,
+    input_string : &'a str,
     input_iterator : Lines<'a>,
     current_command_string : Option<String>,
     current_line_number : usize,
@@ -39,7 +36,7 @@ pub struct Parser<'a> {
 
 impl<'a>  Parser<'a> {
     /// Creates new Parser
-    pub fn new(input : &'a String ) -> Self {
+    pub fn new(input : &'a str) -> Self {
 
         let mut symbol_table = HashMap::new();
         symbol_table.insert("SP".to_string(), 0);
@@ -161,7 +158,7 @@ impl<'a>  Parser<'a> {
             let mut s : String = line.to_string();
             // remove whitespace and comments
             s = str::replace(&s, " ", "");
-            let comment_offset = s.find("//").unwrap_or(s.len());
+            let comment_offset = s.find("//").unwrap_or_else(|| s.len());
             let command_string : String = s.drain(..comment_offset).collect();
             // if there is a valid command, store it in self.current_command_string. Otherwise, advance further
             if command_string.is_empty(){
@@ -184,10 +181,10 @@ impl<'a>  Parser<'a> {
         if re_l_command.is_match(c) {
             let caps = re_l_command.captures(c).unwrap();
             let symbol_name : String = caps.get(1).map_or("", |m| m.as_str()).to_string(); 
-            return Some(symbol_name);
+            Some(symbol_name)
         }
         else {
-            return None;
+            None
         }
     }
 
@@ -205,7 +202,7 @@ impl<'a>  Parser<'a> {
             let dest = caps.get(1).map_or("", |m| m.as_str());
             let comp = caps.get(3).map_or("", |m| m.as_str());
             let jmp = caps.get(5).map_or("", |m| m.as_str());     
-            return Some(Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}});       
+            Some(Command::C {command: CCommand{dest: dest.to_string(), comp: comp.to_string(), jmp: jmp.to_string()}})     
         }
         else if re_a_command.is_match(c) {
             let caps = re_a_command.captures(c).unwrap();
@@ -222,10 +219,10 @@ impl<'a>  Parser<'a> {
                     self.symbol_table[&address_or_symbol]
                 },
             };
-            return Some(Command::A {address : address_number});
+            Some(Command::A {address : address_number})
         }
         else if re_l_command.is_match(c) {
-            return None;
+            None
         }
         else {
             println!("Assembler failed. Syntax error at line {} of the input file.", self.current_line_number);
@@ -246,7 +243,7 @@ impl<'a>  Parser<'a> {
             }    
             self.advance();
         }
-        return output;
+        output
     }
 
 
